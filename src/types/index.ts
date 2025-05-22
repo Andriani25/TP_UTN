@@ -6,3 +6,10 @@ export interface User {
     cellPhone: number,
     id: string
 }
+
+export interface Game {
+   name: string,
+   genere: string,
+   developers: string,
+   rating: number
+}

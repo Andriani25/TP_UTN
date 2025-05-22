@@ -4,11 +4,6 @@ import {getFirestore, collection, doc, setDoc, getDoc, getDocs, DocumentData} fr
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
-// Types
-
-import { User } from "../types";
-
-//
 
 // Your web app's Firebase configuration
 
@@ -26,82 +21,6 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
-const db = getFirestore(app)
-
-// Create users function
-
-// New document | user
-
-export const newUser = async (obj: User) => {
-
-    try{
-
-        await setDoc(doc(db, 'Users', obj.id), {
-        
-            name: obj.name,
-            email: obj.email,
-            cellPhone: obj.cellPhone,
-            id: obj.id
-        })
-        
-        return console.log('New User created!')
-
-    }catch(error){
-      return console.error('ERROR AT src/firebaseConfig/index.ts newUser function!!', error)
-    }
-
-
-}
-
-export const getAllUsers = async() => {
-
- let allDataUsers: DocumentData[] = []
-
-    try{
-
-        const queryDataUsers = await getDocs(collection(db, 'Users'))
-
-        queryDataUsers.forEach((doc) => {
-         allDataUsers.push(doc.data())
-        })
-
-        if(!allDataUsers.length){
-
-            return console.error('allDataUsers empty!!')
-
-        }
-
-        return allDataUsers
-
-    }catch(error){
-
-        console.error('Error at getAllUsers function!!! ===>', error)
-
-    }
-
-}
-
-export const getUser = async(id: string) => {
-
-    try{
-
-        const docRef = doc(db, 'Users', id)
-       
-        const docSnap = await getDoc(docRef)
-
-        if(docSnap.exists()){
-            
-            console.log('Data finded!!')
-
-            return docSnap.data()
-
-        }
-
-    }catch(error){
-        return console.error()
-    }
-
-
-}
+export const db = getFirestore(app)
