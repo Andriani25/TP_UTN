@@ -1,16 +1,31 @@
 import { Router, Request, Response } from "express";
 import { Game } from "../types";
-import { newGame, changeRating, getAllGames, deleteGame, getGame } from "../firebaseConfig/gamesFireBaseFunctions";
+import gameController from '../firebaseConfig/gamesFireBaseFunctions'
+import auth from "../middlewares/auth";
 
 const router = Router()
 
-router.get('/getAllGames', async (req: Request, res: Response) => {
+router.get('/getAllGames', auth, async (req: Request, res: Response) => {
 
-    res.send('Here will be all my games')
+   try{
+
+    const allData = await gameController.getAllGames()
+
+    if(!allData){
+        res.status(400).send('No data finded')
+    }
+
+    res.status(200).send(allData)
+
+   }catch(error){
+
+    res.status(500).send(`Error at /getAllGames ==> ${error}`)
+
+   }
     
 })
 
-router.get('/Game/:name', async (req: Request, res: Response) => {
+router.get('/Game/:name', auth, async (req: Request, res: Response) => {
 
     const findGame: string = req.params.name
 
@@ -20,7 +35,7 @@ router.get('/Game/:name', async (req: Request, res: Response) => {
 
     try{
 
-        const gameData = await getGame(findGame)
+        const gameData = await gameController.getGame(findGame)
 
         res.status(200).send(gameData)
 
@@ -32,17 +47,21 @@ router.get('/Game/:name', async (req: Request, res: Response) => {
 
 })
 
-router.post('/newGame', async (req: Request, res: Response) => {
+router.post('/newGame', auth, async (req: Request, res: Response) => {
     
     if(!req.body) res.status(400).send('No game data sended!!')
 
     const gameData: Required<Game> = req.body.gameData
 
+    if(!gameData.developers || !gameData.genere || !gameData.name || gameData.rating){
+        res.status(400).send('Game data missing!')
+    }
+
     try{
 
-        await newGame(gameData)
+        await gameController.newGame(gameData)
 
-        res.status(201).send(`New game created! ==> ${gameData}`)
+        res.status(201).send(`New game created! ==> ${gameData.name}`)
 
     }catch(error){
         
@@ -52,7 +71,7 @@ router.post('/newGame', async (req: Request, res: Response) => {
 
 })
 
-router.patch('/modifyGame', async (req: Request, res: Response) => {
+router.patch('/modifyGame', auth, async (req: Request, res: Response) => {
 
     if(!req.body){
     res.status(400).send('No values sended!!')
@@ -62,7 +81,7 @@ router.patch('/modifyGame', async (req: Request, res: Response) => {
 
     try{
 
-       changeRating(dataToModify)
+       gameController.changeGameData(dataToModify)
 
        res.status(200).send(`Data modified succesfully! ==> ${dataToModify}`)
 
@@ -71,6 +90,28 @@ router.patch('/modifyGame', async (req: Request, res: Response) => {
         res.status(500).send(`Error at /modifyGame ==> ${error}`)
 
     }
+
+})
+
+router.delete('/deleteGame', auth, (req: Request, res: Response) => {
+
+if(!req.body){
+    res.status(400).send('No game to delet sended!!')
+}
+
+const gameName: string = req.body.gameName
+
+try{
+
+   gameController.deleteGame(gameName)
+
+   res.status(200).send(`Game deleted ==> ${gameName}`)
+    
+}catch(error){
+
+    res.status(500).send(`Error at /deleteGame ==> ${error}`)
+
+}
 
 })
 

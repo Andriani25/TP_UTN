@@ -1,4 +1,5 @@
-import {collection, doc, setDoc, getDoc, getDocs, DocumentData} from 'firebase/firestore/lite'
+import {doc, setDoc, getDoc} from 'firebase/firestore/lite'
+import bcrypt from 'bcryptjs'
 
 // Firebase DB whit configs
 
@@ -15,16 +16,14 @@ import { User } from "../types";
 
 export const newUser = async (obj: User) => {
 
-    console.log('hasta aca llega')
-
     try{
 
-        await setDoc(doc(db, 'Users', obj.id.toString()), {
+        await setDoc(doc(db, 'Users', obj.email.toString()), {
         
             name: obj.name,
             email: obj.email,
             cellPhone: obj.cellPhone,
-            id: obj.id
+            password: obj.password
         })
         
         return console.log('New User created!')
@@ -36,41 +35,40 @@ export const newUser = async (obj: User) => {
 
 }
 
-export const getAllUsers = async() => {
-
- let allDataUsers: DocumentData[] = []
+export const loginUser = async(email: string, password: string) => {
 
     try{
 
-        const queryDataUsers = await getDocs(collection(db, 'Users'))
+        const docRef = await getDoc(doc(db, 'Users', email))
 
-        queryDataUsers.forEach((doc) => {
-         allDataUsers.push(doc.data())
-        })
-
-        if(!allDataUsers.length){
-
-            return console.error('allDataUsers empty!!')
-
+        if(!docRef.exists()){
+            return false
         }
 
-        return allDataUsers
+        const validateHashPassword = bcrypt.compare(password, docRef.data().password)
+
+        if(!validateHashPassword){
+            return false
+        }
+
+        return docRef.data().name
 
     }catch(error){
 
-        console.error('Error at getAllUsers function!!! ===>', error)
+        console.error(`Error at loginUser ==> ${error}`)
 
+       return false 
+        
     }
-
 }
 
-export const getUser = async(id: string) => {
+export const getUser = async(email: string) => {
 
-    console.log(`Searching info about => ${id}`)
+    console.log(`Searching info about => ${email}`)
 
     try{
 
-        const docRef = doc(db, 'Users', id)
+        const docRef = doc(db, 'Users', email)
        
         const docSnap = await getDoc(docRef)
 
